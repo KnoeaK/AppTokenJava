@@ -118,7 +118,7 @@ public class AppTokenJavaExample {
 
         Response response = new OkHttpClient().newCall(request).execute();
 
-        if (response.code() != 200 || response.code() != 201) {
+        if (response.code() != 200 && response.code() != 201) {
             // https://developers.sumsub.com/api-reference/#errors
             // If an unsuccessful answer is received, please log the value of the "correlationId" parameter.
             // Then perhaps you should throw the exception. (depends on the logic of your code)
@@ -139,7 +139,7 @@ public class AppTokenJavaExample {
 
         Response response = new OkHttpClient().newCall(request).execute();
 
-        if (response.code() != 200 || response.code() != 201) {
+        if (response.code() != 200 && response.code() != 201) {
             // https://developers.sumsub.com/api-reference/#errors
             // If an unsuccessful answer is received, please log the value of the "correlationId" parameter.
             // Then perhaps you should throw the exception. (depends on the logic of your code)
