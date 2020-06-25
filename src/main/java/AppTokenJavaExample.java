@@ -2,6 +2,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import model.Applicant;
 import model.DocSet;
 import model.DocType;
+import model.HttpMethod;
 import model.IdDocSetType;
 import model.Metadata;
 import model.RequiredIdDocs;
@@ -111,7 +112,7 @@ public class AppTokenJavaExample {
         Request request = new Request.Builder()
                 .url(SUMSUB_TEST_BASE_URL + url)
                 .header("X-App-Token", SUMSUB_APP_TOKEN)
-                .header("X-App-Access-Sig", getAppAccessSig(ts, "POST", url, requestBodyToBytes(requestBody)))
+                .header("X-App-Access-Sig", createSignature(ts, HttpMethod.POST, url, requestBodyToBytes(requestBody)))
                 .header("X-App-Access-Ts", String.valueOf(ts))
                 .post(requestBody)
                 .build();
@@ -132,7 +133,7 @@ public class AppTokenJavaExample {
         Request request = new Request.Builder()
                 .url(SUMSUB_TEST_BASE_URL + url)
                 .header("X-App-Token", SUMSUB_APP_TOKEN)
-                .header("X-App-Access-Sig", getAppAccessSig(ts, "GET", url, null))
+                .header("X-App-Access-Sig", createSignature(ts, HttpMethod.GET, url, null))
                 .header("X-App-Access-Ts", String.valueOf(ts))
                 .get()
                 .build();
@@ -147,10 +148,10 @@ public class AppTokenJavaExample {
         return response;
     }
 
-    private static String getAppAccessSig(long ts, String method, String path, byte[] body) throws NoSuchAlgorithmException, InvalidKeyException {
+    private static String createSignature(long ts, HttpMethod httpMethod, String path, byte[] body) throws NoSuchAlgorithmException, InvalidKeyException {
         Mac hmacSha256 = Mac.getInstance("HmacSHA256");
         hmacSha256.init(new SecretKeySpec(SUMSUB_SECRET_KEY.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-        hmacSha256.update((ts + method + path).getBytes(StandardCharsets.UTF_8));
+        hmacSha256.update((ts + httpMethod.name() + path).getBytes(StandardCharsets.UTF_8));
         byte[] bytes = body == null ? hmacSha256.doFinal() : hmacSha256.doFinal(body);
         return Hex.encodeHexString(bytes);
     }
