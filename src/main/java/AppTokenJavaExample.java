@@ -35,24 +35,10 @@ public class AppTokenJavaExample {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static void main(String[] args) throws Exception {
-        // The description of the flow can be found here: https://developers.sumsub.com/api-flow/#api-integration-phases
-
-        // Such actions are presented below:
-        // 1) Creating an applicant
-        // 2) Adding a document to the applicant
-        // 3) Getting applicant status
-        // 4) Getting access token
-
         String applicantId = createApplicant();
         System.out.println("The applicant was successfully created: " + applicantId);
 
-        addDocument(applicantId, new File("/Users/knoeak/Desktop/test.png"));
-
-        String applicantStatusStr = getApplicantStatus(applicantId);
-        System.out.println("Applicant status (json string): " + applicantStatusStr);
-
-//        String accessTokenStr = getAccessToken(applicantId);
-//        System.out.println("Access token (json string): " + accessTokenStr);
+        addDocument(applicantId, "/Users/knoeak/MyProjects/AppTokenJava/src/main/resources/images/sumsub-logo.png");
     }
 
     public static String createApplicant() throws IOException, NoSuchAlgorithmException, InvalidKeyException {
@@ -112,7 +98,7 @@ public class AppTokenJavaExample {
     }
 
 
-    public static void addDocument(String applicantId, File doc) throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+    public static void addDocument(String applicantId, String path) throws NoSuchAlgorithmException, InvalidKeyException, IOException {
         // https://developers.sumsub.com/api-reference/#adding-an-id-document
 
         long ts = Instant.now().getEpochSecond();
@@ -120,12 +106,11 @@ public class AppTokenJavaExample {
 
         System.out.println(SUMSUB_TEST_BASE_URL + url);
 
-        String boundary = "----------------------------" + System.currentTimeMillis();
-        String body = MultipartUtil.getBody(boundary, "metadata", "{\"idDocType\":\"PASSPORT\",\"country\":\"ALB\"}", "content", doc);
+        String boundary = String.valueOf(System.currentTimeMillis());
+        String body = MultipartUtil.getBody(boundary, "metadata", "{\"idDocType\":\"PASSPORT\",\"country\":\"ALB\"}", "content", path);
 
         HttpURLConnection httpClient = (HttpURLConnection) new URL("https://ykfawejygs.requestcatcher.com/test").openConnection();
         httpClient.setRequestMethod("POST");
-        httpClient.setRequestProperty("Accept", "*/*");
         httpClient.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
         httpClient.setRequestProperty("X-App-Token", SUMSUB_APP_TOKEN);
         httpClient.setRequestProperty("X-App-Access-Sig", createSignature(ts, HttpMethod.POST, url, body.getBytes()));
@@ -140,69 +125,7 @@ public class AppTokenJavaExample {
         int responseCode = httpClient.getResponseCode();
         System.out.println("Sending 'POST' request to URL: " + SUMSUB_TEST_BASE_URL + url);
         System.out.println("responseCode: " + responseCode);
-
-//        List<String> response = multipart.finish(SUMSUB_APP_TOKEN, ts, url);
-//        System.out.println(response);
     }
-
-    public static String getApplicantStatus(String applicantId) throws Exception {
-        // https://developers.sumsub.com/api-reference/#getting-applicant-status-api
-
-        long ts = Instant.now().getEpochSecond();
-        String url = "/resources/applicants/" + applicantId + "/requiredIdDocsStatus";
-
-        HttpURLConnection httpClient = (HttpURLConnection) new URL(SUMSUB_TEST_BASE_URL + url).openConnection();
-        httpClient.setRequestMethod("GET");
-        httpClient.setRequestProperty("X-App-Token", SUMSUB_APP_TOKEN);
-        httpClient.setRequestProperty("X-App-Access-Sig", createSignature(ts, HttpMethod.GET, url, null));
-        httpClient.setRequestProperty("X-App-Access-Ts", String.valueOf(ts));
-
-        int responseCode = httpClient.getResponseCode();
-        System.out.println("Sending 'GET' request to URL: " + SUMSUB_TEST_BASE_URL + url);
-        System.out.println("responseCode: " + responseCode);
-
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(httpClient.getInputStream()))) {
-
-            StringBuilder response = new StringBuilder();
-            String line;
-
-            while ((line = in.readLine()) != null) {
-                response.append(line);
-            }
-            return response.toString();
-        }
-    }
-//
-//    public static String getAccessToken(String applicantId) throws NoSuchAlgorithmException, InvalidKeyException, IOException {
-//        // https://developers.sumsub.com/api-reference/#access-tokens-for-sdks
-//
-//        Response response = sendPost("/resources/accessTokens?userId=" + applicantId, RequestBody.create(new byte[0], null));
-//
-//        ResponseBody responseBody = response.body();
-//        return responseBody != null ? responseBody.string() : null;
-//    }
-//
-//    private static Response sendPost(String url, RequestBody requestBody) throws IOException, InvalidKeyException, NoSuchAlgorithmException {
-//        long ts = Instant.now().getEpochSecond();
-//
-//        Request request = new Request.Builder()
-//                .url(SUMSUB_TEST_BASE_URL + url)
-//                .header("X-App-Token", SUMSUB_APP_TOKEN)
-//                .header("X-App-Access-Sig", createSignature(ts, HttpMethod.POST, url, requestBodyToBytes(requestBody)))
-//                .header("X-App-Access-Ts", String.valueOf(ts))
-//                .post(requestBody)
-//                .build();
-//
-//        Response response = new OkHttpClient().newCall(request).execute();
-//
-//        if (response.code() != 200 && response.code() != 201) {
-//            // https://developers.sumsub.com/api-reference/#errors
-//            // If an unsuccessful answer is received, please log the value of the "correlationId" parameter.
-//            // Then perhaps you should throw the exception. (depends on the logic of your code)
-//        }
-//        return response;
-//    }
-
 
     public static String createSignature(long ts, HttpMethod httpMethod, String path, byte[] body) throws NoSuchAlgorithmException, InvalidKeyException {
         Mac hmacSha256 = Mac.getInstance("HmacSHA256");
@@ -211,12 +134,6 @@ public class AppTokenJavaExample {
         byte[] bytes = body == null ? hmacSha256.doFinal() : hmacSha256.doFinal(body);
         return Hex.encodeHexString(bytes);
     }
-
-//    public static byte[] requestBodyToBytes(RequestBody requestBody) throws IOException {
-//        Buffer buffer = new Buffer();
-//        requestBody.writeTo(buffer);
-//        return buffer.readByteArray();
-//    }
 }
 
 
